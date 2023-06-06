@@ -15,7 +15,8 @@ def loadData():
 @st.cache_data(persist="disk")
 def convert_df(df):
    return df.to_csv(index=False).encode('utf-8')
-st.title("¿Qué es esta web?")
+st.title("Visualización de indicadores y métricas por país")
+st.header("¿Qué es esta web?")
 
 st.sidebar.success("Selecciona una página de la parte superior")
 

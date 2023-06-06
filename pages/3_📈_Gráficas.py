@@ -6,6 +6,7 @@ from streamlit_folium import st_folium
 import time
 from math import isnan
 import plotly.express as px
+import plotly.graph_objects as go
 
 APP_TITLE = 'Gráficas por país'
 APP_SUB_TITLE = 'Fuente: Gapminder'
@@ -43,21 +44,21 @@ def display_metric_filter(metricNames):
 def display_metric_filter2(metricNames):
     return st.sidebar.selectbox('Métrica a comparar', metricNames,index=1)
 
-def display_min_value():
-    return st.slider('Nº valores mínimos:', min_value=0,max_value=10,step=1, value=4)
-
-def display_max_value():
-    return st.slider('Nº valores máximos:', min_value=0,max_value=10,step=1, value=4)
+def display_x_values(tag):
+    return st.slider(f'Nº valores {tag}:', min_value=0,max_value=10,step=1, value=4)
 
 def selectContinent():
     listaConts = ["Global", "Europa", "Oceanía", "América Norte", "América Sur", "África", "Asia"]
     return st.sidebar.selectbox('Continente', listaConts)
 
-def scatterPlot(df,m1,m2,showText):
+def selectLogScale(tag):
+    return st.checkbox("Escala logarítmica "+tag, value=False)
+
+def scatterPlot(df,m1,m2,showText,xLog=False,yLog=False):
     if showText:
-        fig = px.scatter(df, x=m1, y=m2, color='Continente',text="País")
+        fig = px.scatter(df, x=m1, y=m2, color='Continente',text="País",hover_data=["País"],log_x=xLog,log_y=yLog)
     else:
-        fig = px.scatter(df, x=m1, y=m2, color='Continente')
+        fig = px.scatter(df, x=m1, y=m2, color='Continente',hover_data=["País"],log_x=xLog,log_y=yLog)
     fig.update_layout(yaxis_title=metricNames[metricList.index(m1)],xaxis_title=metricNames[metricList.index(m2)])
     return fig
 
@@ -82,6 +83,16 @@ def lineChart(df,m):
     fig.update_layout(yaxis_title=metricNames[metricList.index(m)],xaxis_title="Año")
     return fig
 
+def barChart(df,m,minV,maxV,setLog,showText):
+    dfMin = df.nsmallest(minV,m)
+    dfMax = df.nlargest(maxV,m)
+    df = pd.concat([dfMin,dfMax])
+    fig = px.bar(df, x=m, y='País',
+                hover_data=[m], color=m,text_auto=showText,color_continuous_scale="RdBu",log_x=setLog)
+    fig.update_layout(yaxis={'categoryorder':'total ascending'},xaxis_title=metricNames[metricList.index(m)])
+
+    return fig
+
 def display_graph(df, year,tipo, m1,m2=None, continente="Global", showText=False, intervals=8):
     if tipo!="Líneas":
         if continente == "Global":
@@ -93,13 +104,29 @@ def display_graph(df, year,tipo, m1,m2=None, continente="Global", showText=False
             df = df[df['Continente'] == continente]
     
     if tipo=="Dispersión":
-        fig = scatterPlot(df,m1,m2,showText)
+        #Usamos escala logarítmica para algunos valores con mucha varianza
+        c1,c2 = st.columns(2)
+        with st.container():
+            with c1:
+                xLog = selectLogScale("eje x")
+            with c2:
+                yLog = selectLogScale("eje y")
+        fig = scatterPlot(df,m1,m2,showText,xLog=xLog,yLog=yLog)
     elif tipo=="Histograma":
         fig = histogram(df,m1,intervals,showText)
     elif tipo=="Mapa de calor (correlaciones)":
         fig = heatmap(df,showText)
     elif tipo=="Líneas":
         fig = lineChart(df,m1)
+    else: #Barras
+        setLog = selectLogScale("")
+        c1,c2 = st.columns(2)
+        with st.container():
+            with c1:
+                minV = display_x_values("mínimos")
+            with c2:
+                maxV = display_x_values("máximos")
+        fig = barChart(df,m1,minV,maxV,setLog,showText)
 
 
     st.plotly_chart(fig, use_container_width=True)
@@ -159,7 +186,9 @@ with st.container():
         st.header(f'Correlaciones entre variables ({continente}) - {year}' )
     elif tipoGrafica == "Líneas":
         st.header(f'Evolución de {metricName1} ({continente})' )
+    else: 
+        st.header(f'Países con mínimo y máximo valor de {metricName1} - {year}' )
 
-    if tipoGrafica != "Líneas":
+    if tipoGrafica not in  ["Líneas","Dispersión","Barras"]:
         showText = display_show_text(tipoGrafica)
     display_graph(prov_data, year,tipoGrafica, selectedMetric1,m2=selectedMetric2, continente=continente,showText=showText,intervals = intervalos)

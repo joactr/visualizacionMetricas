@@ -1,4 +1,4 @@
-,País,Año,PIB_capita,Esperanza_vida,Población,Población_urbana,Bebés_por_mujer,Saneamiento_básico,Continente,ISO
+ID,País,Año,PIB_capita,Esperanza_vida,Población,Población_urbana,Bebés_por_mujer,Saneamiento_básico,Continente,ISO
 0,Afganistán,1799,683.0,28.2,3280000.0,,7.0,,Asia,AF
 1,Angola,1799,700.0,27.0,1570000.0,,6.93,,África,AO
 2,Albania,1799,755.0,35.4,400000.0,,4.6,,Europa,AL
