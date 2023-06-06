@@ -11,6 +11,9 @@ import plotly.graph_objects as go
 APP_TITLE = 'Gráficas por país'
 APP_SUB_TITLE = 'Fuente: Gapminder'
 
+if 'year_enabled' not in st.session_state:
+    st.session_state.year_enabled = False
+
 metricList = ["PIB_capita","Esperanza_vida","Población","Población_urbana","Bebés_por_mujer","Saneamiento_básico"]
 metricNames = ["PIB per cápita (2017 USD)", "Esperanza de vida", "Población total", "% Población urbana", "Bebés promedio por mujer", "% Acceso saneamiento básico"]
 
@@ -18,7 +21,7 @@ def display_time_filters(df):
     year_list = list(df['Año'].unique())
     minYear = int(min(year_list))
     maxYear = int(max(year_list))
-    year = st.sidebar.slider('Año', min_value=minYear,max_value=maxYear,step=1, value=2020)
+    year = st.sidebar.slider('Año', min_value=minYear,max_value=maxYear,step=1, value=2020,disabled=st.session_state.year_enabled)
     return year
     
 
@@ -78,7 +81,6 @@ def heatmap(df,showText):
 def lineChart(df,m):
     #df[m] = df[m].mean()
     df = df.groupby([df["Continente"],df["Año"]])[m].mean().reset_index()
-    print(df.columns)
     fig = px.line(df, x="Año", y=m, color='Continente')
     fig.update_layout(yaxis_title=metricNames[metricList.index(m)],xaxis_title="Año")
     return fig
@@ -159,13 +161,22 @@ prov_list, prov_dict = loadCountries()
 
 graficaList = ["Dispersión","Histograma","Barras","Mapa de calor (correlaciones)", "Líneas"]
 
-
-year = display_time_filters(prov_data)
+holder = st.empty()
+with holder:
+    year = display_time_filters(prov_data)
+holder.empty()
 tipoGrafica = display_grafica_filter(graficaList)
 continente = selectContinent()
-metricName1 = display_metric_filter(metricNames)
-selectedMetric1 = metricList[metricNames.index(metricName1)] #Métrica seleccionada a mostrar
+metricName1,selectedMetric1 ="",""
+if tipoGrafica != "Mapa de calor (correlaciones)":
+    metricName1 = display_metric_filter(metricNames)
+    selectedMetric1 = metricList[metricNames.index(metricName1)] #Métrica seleccionada a mostrar
 
+#Deshabilitamos año
+if tipoGrafica == "Líneas":
+    st.session_state.year_enabled = False
+else: 
+    st.session_state.year_enabled = True
 #Valores inicializados
 selectedMetric2 = None
 showText = False
