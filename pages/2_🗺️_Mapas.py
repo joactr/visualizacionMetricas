@@ -11,6 +11,7 @@ APP_TITLE = 'Métricas por país'
 APP_SUB_TITLE = 'Fuente: Gapminder'
 
 def display_time_filters(df):
+    #Selección de año
     year_list = list(df['Año'].unique())
     minYear = int(min(year_list))
     maxYear = int(max(year_list))
@@ -18,26 +19,31 @@ def display_time_filters(df):
     return year
     
 
-def display_prov_filter():
-    return st.sidebar.selectbox('País', prov_list)
+def display_country_filter():
+    #Desplegable para seleccionar un país y ver sus métricas en la parte inferior
+    return st.sidebar.selectbox('País', country_list)
 
 def display_metric_filter(metricNames):
+    #Selección de métrica a mostrar en mapa
     return st.sidebar.selectbox('Métrica', metricNames)
 
 def selectContinent():
+    #Desplegable para filtrar por continente
     listaConts = ["Global", "Europa", "Oceanía", "América Norte", "América Sur", "África", "Asia"]
     return st.sidebar.selectbox('Continente', listaConts)
 
 def createFoliumMap(df,selectedMetric):
+    #Crear mapa
     legendNames = {"PIB_capita":"PIB per cápita en USD (inflación 2017)","Esperanza_vida": "Esperanza de vida (años)","Población": "Total de población",
                     "Población_urbana":"% Población urbana","Bebés_por_mujer":"Bebés promedio por mujer","Saneamiento_básico":"% Acceso a saneamiento básico"}
     legendName = legendNames[selectedMetric]
     
-    coropletas = folium.Choropleth(geo_data=prov_geo,data=df,columns=["ISO", selectedMetric],
+    coropletas = folium.Choropleth(geo_data=country_geo,data=df,columns=["ISO", selectedMetric],
                                    key_on="feature.properties.ISO", fill_color="RdYlGn",fill_opacity=0.7,line_opacity=1.0,legend_name=legendName)
     return coropletas
 
 def display_map(df, year, selectedMetric, continente):
+    #Mostrar mapa como widget de streamlit_folium
     if continente == "Global":
         df = df[(df['Año'] == year)]
     else:
@@ -61,6 +67,7 @@ def display_map(df, year, selectedMetric, continente):
     return codigo
 
 def number_format(num):
+    #Adecuar formato numérico para no ocupar demasiado espacio
     num = float('{:.3g}'.format(num))
     magnitude = 0
     while abs(num) >= 1000:
@@ -68,8 +75,9 @@ def number_format(num):
         num /= 1000.0
     return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
 
-def display_datos_paro(df, year, prov_name, selectedMetric, name):
-    df = df[(df['Año'] == year) & (df['País'] == prov_name)]
+def display_datos(df, year, country_name, selectedMetric, name):
+    #Mostrar datos del país seleccionado debajo del mapa
+    df = df[(df['Año'] == year) & (df['País'] == country_name)]
     if not isnan(df[selectedMetric].iat[0]):
         if selectedMetric == "PIB_capita":
             st.metric(name, "$"+str(int(df[selectedMetric].iat[0])))
@@ -96,53 +104,51 @@ def loadData():
 
 @st.cache_data
 def loadCountries():
-    c_list = list(prov_data['País'].unique())
-    c_dict = pd.Series(prov_data["País"].values,index=prov_data["ISO"]).to_dict()
+    c_list = list(country_data['País'].unique())
+    c_dict = pd.Series(country_data["País"].values,index=country_data["ISO"]).to_dict()
     return c_list,c_dict
 
 st.set_page_config(APP_TITLE,page_icon='🗺️')
-#st.title(APP_TITLE)
 
-
-prov_geo = loadGeo()
-prov_data = loadData()
-
-prov_list, prov_dict = loadCountries()
+#Carga de datos
+country_geo = loadGeo()
+country_data = loadData()
+country_list, country_dict = loadCountries()
 
 metricList = ["PIB_capita","Esperanza_vida","Población","Población_urbana","Bebés_por_mujer","Saneamiento_básico"]
 metricNames = ["PIB per cápita (2017 USD)", "Esperanza de vida", "Población total", "% Población urbana", "Bebés promedio por mujer", "% Acceso saneamiento básico"]
-year = display_time_filters(prov_data)
+year = display_time_filters(country_data)
 continente = selectContinent()
 metricName = display_metric_filter(metricNames)
 selectedMetric = metricList[metricNames.index(metricName)] #Métrica seleccionada a mostrar
 st.header(f'{metricName} ({continente}) - {year}' )
 st.caption(APP_SUB_TITLE)
 with st.container():
-    prov_code = display_map(prov_data, year, selectedMetric, continente)
-prov_name = display_prov_filter()
+    country_code = display_map(country_data, year, selectedMetric, continente)
+country_name = display_country_filter()
 
 
 #Display Metrics
-if (prov_code!='00'):
-    prov_name = prov_dict[prov_code]
+if (country_code!='00'):
+    country_name = country_dict[country_code]
 
 
-st.subheader(f'Métricas en: \t{prov_name}')    
+st.subheader(f'Métricas en: \t{country_name}')    
 
 
 with st.container():
     col1, col2, col3 = st.columns(3)
     with col1:
-        display_datos_paro(prov_data, year, prov_name,"PIB_capita","PIB per cápita (2017 USD)")
+        display_datos(country_data, year, country_name,"PIB_capita","PIB per cápita (2017 USD)")
     with col2:
-        display_datos_paro(prov_data, year, prov_name,"Esperanza_vida", "Esperanza de vida")
+        display_datos(country_data, year, country_name,"Esperanza_vida", "Esperanza de vida")
     with col3:
-        display_datos_paro(prov_data, year, prov_name,"Población","Población total")
+        display_datos(country_data, year, country_name,"Población","Población total")
 with st.container(): 
     col4, col5, col6 = st.columns(3)
     with col4:
-        display_datos_paro(prov_data, year, prov_name,"Población_urbana","% Población urbana")
+        display_datos(country_data, year, country_name,"Población_urbana","% Población urbana")
     with col5:
-        display_datos_paro(prov_data, year, prov_name,"Bebés_por_mujer","Bebés promedio por mujer")
+        display_datos(country_data, year, country_name,"Bebés_por_mujer","Bebés promedio por mujer")
     with col6:
-        display_datos_paro(prov_data, year, prov_name,"Saneamiento_básico","% Acceso saneamiento básico")
+        display_datos(country_data, year, country_name,"Saneamiento_básico","% Acceso saneamiento básico")
