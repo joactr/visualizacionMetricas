@@ -10,7 +10,7 @@ from math import isnan
 APP_TITLE = 'Métricas por país'
 APP_SUB_TITLE = 'Fuente: Gapminder'
 
-def display_time_filters(df):
+def display_year_filters(df):
     #Selección de año
     year_list = list(df['Año'].unique())
     minYear = int(min(year_list))
@@ -117,7 +117,7 @@ country_list, country_dict = loadCountries()
 
 metricList = ["PIB_capita","Esperanza_vida","Población","Población_urbana","Bebés_por_mujer","Saneamiento_básico"]
 metricNames = ["PIB per cápita (2017 USD)", "Esperanza de vida", "Población total", "% Población urbana", "Bebés promedio por mujer", "% Acceso saneamiento básico"]
-year = display_time_filters(country_data)
+year = display_year_filters(country_data)
 continente = selectContinent()
 metricName = display_metric_filter(metricNames)
 selectedMetric = metricList[metricNames.index(metricName)] #Métrica seleccionada a mostrar

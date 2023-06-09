@@ -11,36 +11,15 @@ import plotly.graph_objects as go
 APP_TITLE = 'Gráficas por país'
 APP_SUB_TITLE = 'Fuente: Gapminder'
 
-if 'year_enabled' not in st.session_state:
-    st.session_state.year_enabled = True #Controla si está activado el widget de año
-
-if 'refresh_thr' not in st.session_state:
-    st.session_state.refresh_thr = 0 #Controla recarga para widget de año
-
 metricList = ["PIB_capita","Esperanza_vida","Población","Población_urbana","Bebés_por_mujer","Saneamiento_básico"]
 metricNames = ["PIB per cápita (2017 USD)", "Esperanza de vida", "Población total", "% Población urbana", "Bebés promedio por mujer", "% Acceso saneamiento básico"]
 
-def checkShowYear(tipoGrafica):
-    #Deshabilitamos año para gráfico de líneas
-    #Reiniciamos la visualización si se cambia de tipo de gráfica
-    if tipoGrafica == "Líneas":
-        st.session_state.year_enabled = True
-    else: 
-        st.session_state.year_enabled = False
-
-    if st.session_state.refresh_thr < 2:
-        st.session_state.refresh_thr += 1
-        st.experimental_rerun()
-        print(st.session_state.refresh_thr)
-    else:
-        st.session_state.refresh_thr = 0
-
-def display_time_filters(df):
+def display_year_filters(df):
     #Selección de año
     year_list = list(df['Año'].unique())
     minYear = int(min(year_list))
     maxYear = int(max(year_list))
-    year = st.sidebar.slider('Año', min_value=minYear,max_value=maxYear,step=1, value=2020,disabled=st.session_state.year_enabled)
+    year = st.sidebar.slider('Año', min_value=minYear,max_value=maxYear,step=1, value=2020)
     return year
 
 def display_grafica_filter(tipos):
@@ -117,7 +96,7 @@ def barChart(df,m,minV,maxV,setLog,showText):
 
     return fig
 
-def display_graph(df, year,tipo, m1,m2=None, continente="Global", showText=False, intervals=8):
+def display_graph(df,tipo, m1,year=2020,m2=None, continente="Global", showText=False, intervals=8):
     #Función encargada de ajustar conjunto y mostrar gráfica con valores adecuados
     if tipo!="Líneas":
         if continente == "Global":
@@ -183,7 +162,7 @@ country_list, country_dict = loadCountries()
 graficaList = ["Dispersión","Histograma","Barras","Mapa de calor (correlaciones)", "Líneas"]
 
 
-year = display_time_filters(country_data)
+
 tipoGrafica = display_grafica_filter(graficaList)
 continente = selectContinent()
 metricName1,selectedMetric1 ="",""
@@ -191,21 +170,29 @@ if tipoGrafica != "Mapa de calor (correlaciones)":
     metricName1 = display_metric_filter(metricNames)
     selectedMetric1 = metricList[metricNames.index(metricName1)] #Métrica seleccionada a mostrar
 
-checkShowYear(tipoGrafica)
 
 #Valores inicializados
 selectedMetric2 = None
 showText = False
 intervalos = 8
+year = 2020
+
+#Renderizado condicional de widgets
+if tipoGrafica == "Histograma":
+    intervalos = display_histogram_intervals()
+elif tipoGrafica == "Dispersión":
+    metricName2 = display_metric_filter2(metricNames)
+    selectedMetric2 = metricList[metricNames.index(metricName2)] #Métrica seleccionada a mostrar
+
+#No necesitamos año si es gráfica de líneas´
+if tipoGrafica != "Líneas":
+    year = display_year_filters(country_data)
 
 st.caption(APP_SUB_TITLE)
 with st.container():
     if tipoGrafica == "Histograma":
         st.header(f'Distribución de {metricName1} ({continente}) - {year}' )
-        intervalos = display_histogram_intervals()
     elif tipoGrafica == "Dispersión":
-        metricName2 = display_metric_filter2(metricNames)
-        selectedMetric2 = metricList[metricNames.index(metricName2)] #Métrica seleccionada a mostrar
         st.header(f'{metricName1} y {metricName2} ({continente}) - {year}' )
     elif tipoGrafica == "Mapa de calor (correlaciones)":
         st.header(f'Correlaciones entre variables ({continente}) - {year}' )
@@ -216,4 +203,4 @@ with st.container():
 
     if tipoGrafica not in  ["Líneas","Dispersión","Barras"]:
         showText = display_show_text(tipoGrafica)
-    display_graph(country_data, year,tipoGrafica, selectedMetric1,m2=selectedMetric2, continente=continente,showText=showText,intervals = intervalos)
+    display_graph(country_data,tipoGrafica, selectedMetric1,year=year,m2=selectedMetric2, continente=continente,showText=showText,intervals = intervalos)
