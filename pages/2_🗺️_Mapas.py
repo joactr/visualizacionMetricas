@@ -117,15 +117,16 @@ country_list, country_dict = loadCountries()
 
 metricList = ["PIB_capita","Esperanza_vida","Población","Población_urbana","Bebés_por_mujer","Saneamiento_básico"]
 metricNames = ["PIB per cápita (2017 USD)", "Esperanza de vida", "Población total", "% Población urbana", "Bebés promedio por mujer", "% Acceso saneamiento básico"]
-year = display_year_filters(country_data)
 continente = selectContinent()
 metricName = display_metric_filter(metricNames)
 selectedMetric = metricList[metricNames.index(metricName)] #Métrica seleccionada a mostrar
+country_name = display_country_filter()
+year = display_year_filters(country_data)
 st.header(f'{metricName} ({continente}) - {year}' )
 st.caption(APP_SUB_TITLE)
 with st.container():
     country_code = display_map(country_data, year, selectedMetric, continente)
-country_name = display_country_filter()
+
 
 
 #Display Metrics
