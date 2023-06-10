@@ -1,0 +1,10 @@
+Para instalar las dependencias se puede usar el archivo requirements.txt e instalar con pip:
+
+    pip install -r requirements.txt 
+
+
+Para ejecutar el proyecto, basta con el comando:
+
+    streamlit run 1_🏘️_Inicio.py
+
+Se puede escribir streamlit run 1_ y autocompletar con tabulador para no poner el emoji.

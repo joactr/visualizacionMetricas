@@ -3,7 +3,6 @@ import pandas as pd
 import folium
 import geopandas as gpd
 from streamlit_folium import st_folium
-import time
 from math import isnan
 
 
