@@ -178,9 +178,7 @@ intervalos = 8
 year = 2020
 
 #Renderizado condicional de widgets
-if tipoGrafica == "Histograma":
-    intervalos = display_histogram_intervals()
-elif tipoGrafica == "Dispersión":
+if tipoGrafica == "Dispersión":
     metricName2 = display_metric_filter2(metricNames)
     selectedMetric2 = metricList[metricNames.index(metricName2)] #Métrica seleccionada a mostrar
 
@@ -200,6 +198,10 @@ with st.container():
         st.header(f'Evolución de {metricName1} ({continente})' )
     else: 
         st.header(f'Países con mínimo y máximo valor de {metricName1} - {year}' )
+
+    #Se pone después de título para que no esté por encima, queda raro
+    if tipoGrafica == "Histograma":
+        intervalos = display_histogram_intervals()
 
     if tipoGrafica not in  ["Líneas","Dispersión","Barras"]:
         showText = display_show_text(tipoGrafica)
