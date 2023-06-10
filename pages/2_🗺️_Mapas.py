@@ -88,7 +88,7 @@ def display_datos(df, year, country_name, selectedMetric, name):
         elif selectedMetric == "Bebés_por_mujer":
             st.metric(name, str(df[selectedMetric].iat[0]))
         else:
-            st.metric(name, str(df[selectedMetric].iat[0])+' %')
+            st.metric(name, str(df[selectedMetric].iat[0])+'%')
     else: #No tenemos el dato
         st.metric(name, "Desconocido")
 
